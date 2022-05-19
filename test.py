@@ -10,8 +10,23 @@ import pytest
 import sys
 import os
 
+
+######### PASSING ARGUMENTS IN PYTEST BY COMMAND-LINE #########
+
+from pytest import fixture
+
+def pytest_addoption(parser):
+    parser.addoption("--password", action="store")
+
+@fixture()
+def name(request):
+    return request.config.getoption("--password")
+    
+###############################################################
+
+
 # Create the satellite and select a footprint
-sat = Sentinel2('samueldubos', '5c6a7b54')
+sat = Sentinel2('samueldubos', password)
 example_footprint = 'POLYGON((' \
                     '-69.9 51.7,' \
                     '-57.2 51.7,' \
@@ -52,6 +67,12 @@ class TestGeneral:
 # Unit tests concerning the search() method
 class TestSearchMethod:
 
+    @pytest.mark.parametrize("begin_date, end_date", [('NOW-0DAYS', 'NOW')])
+    def test_null_request_handled(self, begin_date, end_date):
+        self.begin_date = begin_date
+        self.end_date = end_date
+        sat.search(self.begin_date, self.end_date, example_footprint)
+
     @pytest.mark.parametrize("begin_date, end_date", [('2022-05-09T00:00:00.000Z', '2022-05-10T00:00:00.000Z')])
     def test_unit_request_handled(self, begin_date, end_date):
         self.begin_date = begin_date
@@ -71,7 +92,7 @@ class TestSearchMethod:
         self.end_date = end_date
         assert product in sat.search(self.begin_date, self.end_date, example_footprint)
 
-
+    
 # Unit tests concerning the download() method
 class TestDownloadMethod:
 
