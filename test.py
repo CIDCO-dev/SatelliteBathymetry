@@ -53,7 +53,7 @@ class TestGeneral:
 class TestSearchMethod:
 
     @pytest.mark.parametrize("begin_date, end_date", [('2022-05-09T00:00:00.000Z', '2022-05-10T00:00:00.000Z')])
-    def test_no_error(self, begin_date, end_date):
+    def test_unit_request_handled(self, begin_date, end_date):
         self.begin_date = begin_date
         self.end_date = end_date
         sat.search(self.begin_date, self.end_date, example_footprint)
@@ -62,7 +62,7 @@ class TestSearchMethod:
         for el in search:
             assert isinstance(el, str)
 
-    def test_compare_length(self):
+    def test_are_lengths_coherent(self):
         assert len(search_2) >= len(search_1)
 
     @pytest.mark.parametrize("begin_date, end_date", [('2022-05-15T00:00:00.000Z', '2022-05-17T00:00:00.000Z')])
