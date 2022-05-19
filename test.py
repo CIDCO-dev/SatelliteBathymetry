@@ -1,33 +1,36 @@
+"""
+Copyright 2022 © Centre Interdisciplinaire de développement en Cartographie des Océans (CIDCO), Tous droits réservés
+@Samuel_Dubos
+"""
+
 from Sentinel2 import Sentinel2
+from hashlib import md5
 import requests
 import pytest
 import sys
 import os
-from hashlib import md5
 
-# Create the satellite and chose a footprint
+# Create the satellite and select a footprint
 sat = Sentinel2('samueldubos', '5c6a7b54')
 example_footprint = 'POLYGON((' \
-                    '-69.87041507596486 51.67827946383208,' \
-                    '-57.21416507596486 51.67827946383208,' \
-                    '-57.21416507596486 47.52343468727058,' \
-                    '-69.87041507596486 47.52343468727058,' \
-                    '-69.87041507596486 51.67827946383208))'
+                    '-69.9 51.7,' \
+                    '-57.2 51.7,' \
+                    '-57.2 47.5,' \
+                    '-69.9 47.5,' \
+                    '-69.9 51.7))'
 
 # Set the required dates
-set_example_date = '2022-05-15T00:00:00.000Z'
 example_date = 'NOW-6DAYS'
 example_date_1 = 'NOW-5DAYS'
 example_date_2 = 'NOW-8DAYS'
 
 # Make use of the search method
-search = sat.search(example_date, example_footprint)
-set_search = sat.search(set_example_date, example_footprint)
-search_1 = sat.search(example_date_1, example_footprint)
-search_2 = sat.search(example_date_2, example_footprint)
+search = sat.search(example_date, 'NOW', example_footprint)
+search_1 = sat.search(example_date_1, 'NOW', example_footprint)
+search_2 = sat.search(example_date_2, 'NOW', example_footprint)
 
 # Define a product
-product = '311b58ad-9ca6-4137-a022-44c3f163d555'
+product = '72574aaf-85f0-42f3-814a-ef08a079490a'
 
 # Download a product
 sat.download(product)      
@@ -38,8 +41,8 @@ class TestGeneral:
 
     def test_status_code(self):
         date = 'NOW-1DAYS'
-        username = getattr(sat, 'username')
-        password = getattr(sat, 'password')
+        username = sat.username
+        password = sat.password
         req = requests.get(f'https://scihub.copernicus.eu/dhus/search?'
                            f'q=(beginPosition:[{date}%20TO%20NOW])',
                            auth=(username, password))
@@ -49,11 +52,11 @@ class TestGeneral:
 # Unit tests concerning the search() method
 class TestSearchMethod:
 
-    def test_not_none(self):
-        assert search is not None
-
-    def test_is_list(self):
-        assert isinstance(search, list)
+    @pytest.mark.parametrize("begin_date, end_date", [('2022-05-09T00:00:00.000Z', '2022-05-10T00:00:00.000Z')])
+    def test_no_error(self, begin_date, end_date):
+        self.begin_date = begin_date
+        self.end_date = end_date
+        sat.search(self.begin_date, self.end_date, example_footprint)
 
     def test_is_list_of_strings(self):
         for el in search:
@@ -62,8 +65,11 @@ class TestSearchMethod:
     def test_compare_length(self):
         assert len(search_2) >= len(search_1)
 
-    def test_values(self):
-        assert product in set_search
+    @pytest.mark.parametrize("begin_date, end_date", [('2022-05-15T00:00:00.000Z', '2022-05-17T00:00:00.000Z')])
+    def test_answer_uncluded(self, begin_date, end_date):
+        self.begin_date = begin_date
+        self.end_date = end_date
+        assert product in sat.search(self.begin_date, self.end_date, example_footprint)
 
 
 # Unit tests concerning the download() method
@@ -74,9 +80,8 @@ class TestDownloadMethod:
         assert os.path.exists(f"{path}/{product}.zip")
 
     def test_identical_binaries(self):
-    
-        username = getattr(sat, 'username')
-        password = getattr(sat, 'password')
+        username = sat.username
+        password = sat.password
         r = requests.get(f"https://scihub.copernicus.eu/dhus"
                          f"/odata/v1/Products('{product}')"
                          f"/$value",
@@ -89,7 +94,4 @@ class TestDownloadMethod:
             data = f.read()
             md5_product.update(data)
         
-
         assert md5_product.hexdigest() == md5_test.hexdigest()
-
-
