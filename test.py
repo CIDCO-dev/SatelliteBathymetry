@@ -105,3 +105,4 @@ class TestDownloadMethod:
             md5_product.update(data)
         
         assert md5_product.hexdigest() == md5_test.hexdigest()
+
