@@ -9,8 +9,8 @@ from numpy import inf, ones, zeros
 from math import log
 
 
-def generate_mask_water(scl, dilatation, size):
-
+def generate_water_mask(scl, dilatation, size):
+    """Generate a water mask without dilated clouds and useless pixels."""
     cloud_mask, useless_mask, water_mask = [zeros(size) for _ in range(3)]
     for i, row_ in enumerate(scl):
         for j, pixel_ in enumerate(row_):
@@ -28,54 +28,59 @@ def generate_mask_water(scl, dilatation, size):
 
 def apply_mask(img_, mask_, size):
     """Keeps only the pixels on the background of the mask."""
-    result = zeros(size)  # Create an empty image
-    for i, row_ in enumerate(mask_):  # Browse the mask row after row
-        for j, pixel_ in enumerate(row_):  # Browse rows pixel after pixel
-            if pixel_ == 0:  # Pixel on the background
-                result[i, j] = img_[i, j]  # Empty image updated
+    result = zeros(size)
+    for i, row_ in enumerate(mask_):
+        for j, pixel_ in enumerate(row_):
+            if pixel_ == 0:
+                result[i, j] = img_[i, j]
     return result
 
 
 def ratio_transform(band1, band2, size):
     """Applies the Ratio Transform Algorithm to the bands band1 and band2."""
-    result = zeros(size)  # Create an empty image
-    for i, row_ in enumerate(band1):  # Browse the band row after row
-        for j, pixel_ in enumerate(row_):  # Browse rows pixel after pixel
-            blue, green = band1[i, j], band2[i, j]  # Define each band
-            if pixel_ != 0 and blue > 0 and green > 0 and green != 1:  # Valid pixel (definition domain etc.)
-                result[i, j] = log(blue) / log(green)  # Ratio Transform Algorithm
+    result = zeros(size)
+    for i, row_ in enumerate(band1):
+        for j, pixel_ in enumerate(row_):
+            blue, green = band1[i, j], band2[i, j]
+            if pixel_ != 0 and blue > 0 and green > 0 and green != 1:
+                result[i, j] = log(blue) / log(green)
     return result
 
 
 def create_rta(scl, band1, band2, dilatation, scale=(False, None)):
     """Creates a new masked image with RTA value for each pixel."""
-    if scale[0]:  # Resizing requested
-        size = scale[1]  # Define the size
-        scl = resize(scl, size, interpolation=INTER_LINEAR)  # Resize SCL
-        band1 = resize(band1, size, interpolation=INTER_LINEAR)  # Resize band1
-        band2 = resize(band2, size, interpolation=INTER_LINEAR)  # Resize band2
-        water_mask = generate_mask_water(scl, dilatation, size)
-        band1_m = apply_mask(band1, water_mask, size)  # Mask out the invalid pixels
-        band2_m = apply_mask(band2, water_mask, size)  # Mask out the invalid pixels
-    else:  # Resizing not requested
-        water_mask = generate_mask_water(scl, dilatation, scl.shape)
+    if scale[0]:
+        size = (int(band1.shape[0] / scale[1]), int(band1.shape[1] / scale[1]))
+        scl = resize(scl, size, interpolation=INTER_LINEAR)
+        band1 = resize(band1, size, interpolation=INTER_LINEAR)
+        band2 = resize(band2, size, interpolation=INTER_LINEAR)
+        water_mask = generate_water_mask(scl, dilatation, size)
+        band1_m = apply_mask(band1, water_mask, size)
+        band2_m = apply_mask(band2, water_mask, size)
+    else:
+        water_mask = generate_water_mask(scl, dilatation, scl.shape)
         water_mask = resize(water_mask, band1.shape, interpolation=INTER_LINEAR)
-        band1_m = apply_mask(band1, water_mask, band1.shape)  # Mask out the invalid pixels
-        band2_m = apply_mask(band2, water_mask, band1.shape)  # Mask out the invalid pixels
-    return ratio_transform(band1_m, band2_m, band1.shape)  # Apply the Ratio Transform Algorithm
+        band1_m = apply_mask(band1, water_mask, band1.shape)
+        band2_m = apply_mask(band2, water_mask, band1.shape)
+    rta_ = ratio_transform(band1_m, band2_m, band1.shape)
+    for i, row_ in enumerate(rta_):
+        for j, pixel_ in enumerate(row_):
+            if pixel_ == 0:
+                rta_[i, j] = inf
+    return rta_
 
 
 def convert_rta(rta, m0, m1, plot=(False, None, None)):
     """Converts each RTA value into a depth in meters."""
-    for i, row in enumerate(rta):  # Browse the rta-image row after row
-        for j, pixel in enumerate(row):  # Browse rows pixel after pixel
-            if pixel == 0:  # Invalid pixel
-                rta[i, j] = inf  # Remove pixel from final image
-            else:  # Valid pixel
-                rta[i, j] = -(m1 * rta[i, j] - m0)  # Convert the pixel
-    if plot:  # Plotting requested
-        figure(plot[1])  # Create new figure
-        imshow(rta, plot[2])  # Plot the image
+    for i, row in enumerate(rta):
+        for j, pixel in enumerate(row):
+            if pixel == 0:
+                rta[i, j] = inf
+            else:
+                rta[i, j] = -(m1 * rta[i, j] - m0)
+    if plot:
+        figure(plot[1])
+        imshow(rta, plot[2])
         colorbar()
 
 
