@@ -19,7 +19,7 @@ class Sentinel2(object):
 
         ids = []
         page = 0
-        resultsPerPage = 10
+        resultsPerPage = 30
         totalResults = 100 #anything gt resultsPerPage will do
 
         # get a page of search results
@@ -47,6 +47,7 @@ class Sentinel2(object):
                         (result, flag) = (list_dic['id'], False) if 'id' in list_dic else (list_dic[k]['id'], True)
                         ids.append(result)
                         k += 1
+
                     page += 1
                 else:
                     sys.stderr.write("Error: No entries in search results\n")
@@ -74,3 +75,4 @@ class Sentinel2(object):
             sys.stderr.write(f"Error while fetching file search results: {req.status_code}\n")
 
         return req.content
+                 
