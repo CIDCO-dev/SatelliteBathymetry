@@ -113,6 +113,8 @@ class Sentinel{
 				}
 			}
 			
+			//TODO erode / dilate mask
+			
 			mask.convertTo(mask, CV_16UC1);
 			
 			cv::Mat result(cv::Size(y, x), CV_16UC1, cv::Scalar(0));

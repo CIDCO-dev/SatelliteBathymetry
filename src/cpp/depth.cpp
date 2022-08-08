@@ -9,68 +9,8 @@
 #include <pcl/point_types.h>
 #include <pcl/kdtree/kdtree_flann.h>
 
-  // WGS84 ellipsoid Parameters
-
-  /**WGS84 ellipsoid semi-major axis*/
-  double a = 6378137.0;
-
-  /**WGS84 ellipsoid first eccentricity squared*/
-  double e2 = 0.081819190842622 * 0.081819190842622;
-
-  /**WGS84 ellipsoid inverse flattening*/
-  double f = 1.0 / 298.257223563;
-
-  /**WGS84 ellipsoid semi-minor axis*/
-  double b = a * (1-f); // semi-minor axis
-
-  /**WGS84 ellipsoid second eccentricity squared*/
-  double epsilon = e2 / (1.0 - e2); // second eccentricity squared
-  
-  double PI = 3.14159265358979323846;
-  
-  double R2D = ((double)180/(double)PI);
-
-
-std::vector<double> convertECEFToLongitudeLatitudeElevation(Eigen::Vector3d & positionEcef) {
-    double x = positionEcef(0);
-    double y = positionEcef(1);
-    double z = positionEcef(2);
-
-    // Bowring (1985) algorithm
-    double p2 = x * x + y*y;
-    double r2 = p2 + z*z;
-    double p = std::sqrt(p2);
-    double r = std::sqrt(r2);
-
-    double tanu = (1 - f) * (z / p) * (1 + epsilon * b / r);
-    double tan2u = tanu * tanu;
-
-    double cos2u = 1.0 / (1.0 + tan2u);
-    double cosu = std::sqrt(cos2u);
-    double cos3u = cos2u * cosu;
-
-    double sinu = tanu * cosu;
-    double sin2u = 1.0 - cos2u;
-    double sin3u = sin2u * sinu;
-
-    double tanlat = (z + epsilon * b * sin3u) / (p - e2 * a * cos3u);
-    double tan2lat = tanlat * tanlat;
-    double cos2lat = 1.0 / (1.0 + tan2lat);
-    double sin2lat = 1.0 - cos2lat;
-
-    double coslat = std::sqrt(cos2lat);
-    double sinlat = tanlat * coslat;
-
-    double longitude = std::atan2(y, x);
-    double latitude = std::atan(tanlat);
-    double height = p * coslat + z * sinlat - a * sqrt(1.0 - e2 * sin2lat);
-    
-    std::vector<double> positionGeographic{latitude*R2D, longitude*R2D, height};
-    
-    return positionGeographic;
-    
-  }
-
+#include "../MBES-lib/src/math/CoordinateTransform.hpp"
+#include "../MBES-lib/src/Position.hpp"
 
 void readFileXYZ(std::string filename, pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud){
 
@@ -79,6 +19,7 @@ void readFileXYZ(std::string filename, pcl::PointCloud<pcl::PointXYZ>::Ptr &clou
 	std::string line;
 	double x,y,z;
 	Eigen::Vector3d positionEcef;
+	Position positionGeographic(0,0,0,0);
 	
 	if (myfile.is_open()){
 		while ( getline (myfile,line) ) {
@@ -90,12 +31,12 @@ void readFileXYZ(std::string filename, pcl::PointCloud<pcl::PointXYZ>::Ptr &clou
 			positionEcef(1) = y;
 			positionEcef(2) = z;
 			
-			std::vector<double> positionGeographic = convertECEFToLongitudeLatitudeElevation(positionEcef);
+			CoordinateTransform::convertECEFToLongitudeLatitudeElevation(positionEcef, positionGeographic);
 			
-			//std::cout<< positionGeographic[0] <<" " <<positionGeographic[1] <<" " <<positionGeographic[2] << "\n";
+			Eigen::Vector3d vectorGeographic = positionGeographic.getVector();
 			
 			// lat lon depth
-			cloud->push_back(pcl::PointXYZ(positionGeographic[0], positionGeographic[1], positionGeographic[2]) );
+			cloud->push_back(pcl::PointXYZ(vectorGeographic(0), vectorGeographic(1), vectorGeographic(2)) );
 		}
 	}
 }
