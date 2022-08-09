@@ -2,8 +2,7 @@
 Satellite-Derived Bathymetry Toolkit
 
 ```
-install dependencies
-build opencv
+install dependencies 
 
 mkdir build && cd build
 cmake ..

@@ -1,3 +1,0 @@
-apt install libpcl-dev (1.10.0+dfsg-5ubuntu1)
-apt install libeigen3-dev (3.3.7-2)
-

@@ -9,8 +9,8 @@
 #include <pcl/point_types.h>
 #include <pcl/kdtree/kdtree_flann.h>
 
-#include "../MBES-lib/src/math/CoordinateTransform.hpp"
-#include "../MBES-lib/src/Position.hpp"
+//#include "../MBES-lib/src/math/CoordinateTransform.hpp"
+//#include "../MBES-lib/src/Position.hpp"
 
 void readFileXYZ(std::string filename, pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud){
 
@@ -27,16 +27,17 @@ void readFileXYZ(std::string filename, pcl::PointCloud<pcl::PointXYZ>::Ptr &clou
 			ss >> x >> y >> z;
 			
 			//std::cout<<x <<" "<<y <<" "<< z<<"\n";
+			/*
 			positionEcef(0) = x;
 			positionEcef(1) = y;
 			positionEcef(2) = z;
+			*/
+			//CoordinateTransform::convertECEFToLongitudeLatitudeElevation(positionEcef, positionGeographic);
 			
-			CoordinateTransform::convertECEFToLongitudeLatitudeElevation(positionEcef, positionGeographic);
-			
-			Eigen::Vector3d vectorGeographic = positionGeographic.getVector();
+			//Eigen::Vector3d vectorGeographic = positionGeographic.getVector();
 			
 			// lat lon depth
-			cloud->push_back(pcl::PointXYZ(vectorGeographic(0), vectorGeographic(1), vectorGeographic(2)) );
+			cloud->push_back(pcl::PointXYZ(x, y, z));
 		}
 	}
 }
