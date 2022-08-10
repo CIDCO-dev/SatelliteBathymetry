@@ -14,9 +14,8 @@ def download_products(products, SentinelDirDeck):
 		sentinel2.download(product, productPath)
 		zipFile = os.path.join(productPath, product)
 		print("unzip file : ", zipFile)
-		p = subprocess.Popen('unzip {} -d {}'.format(zipFile+".zip", productPath) , shell='True')
+		p = subprocess.Popen('unzip {} -d {}'.format(zipFile+".zip", productPath), shell='True', stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 		p.wait() # ?? is that necessary
-		
 		p = subprocess.Popen('rm {}'.format(zipFile+".zip") , shell='True')
 		p.wait()
 		newDirName = os.path.join(productPath, product)
@@ -28,6 +27,14 @@ def download_products(products, SentinelDirDeck):
 
 
 #def georeference():
+	# ici on va utiliser la class/fonction que Samuel a ecrit pour trouver les fichiers voulu et les parser avec MBES georeference
+	# etape 1 trouver des surfaces avec une profondeur de 3 a 20m
+	# etape 2 mettre tout les points (qui peuvent etre calculer dans un image X) dans un seul fichier
+
+
+#def computeSatBathy:
+	# ici on va processer les images via ./../build/depth workingDir/product/product/GRANULE/L2A.../IMG_DATA/
+
 
 if len(sys.argv) != 4:
         sys.stderr.write("Usage: pyhon3 script.py username password workingDir  \n")
@@ -75,5 +82,4 @@ sentinel2DownloaderThread.start()
 # wait until thread 1 is completely executed
 sentinel2DownloaderThread.join()
 
-# both threads completely executed
-print("Done!")
+
