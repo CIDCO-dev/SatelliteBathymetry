@@ -1,39 +1,69 @@
 import threading
 import time
-import collections
-
-
+from queue import Queue
  
-def handleClient1(waitTime, deck):
-	for i in range(11):
-		deck.append(i)
-		time.sleep(waitTime)   
-
-def handleClient2(waitTime, deck):
-	if(len(deck) != 0):
-		deck.popleft()
-		time.sleep(waitTime) 
+# Shared Memory variables
+q = Queue()
  
+# Declaring Semaphores
+mutex = threading.Semaphore()
+empty = threading.Semaphore(20)
+full = threading.Semaphore(0)
  
-if __name__ =="__main__":
+# Producer Thread Class
+class Producer(threading.Thread):
+	def run(self):
 
-	deck = collections.deque([])
+		global mutex, empty, full, q
 
-	# creating thread
-	t1 = threading.Thread(target=handleClient1, args=(10, deck))
-	t2 = threading.Thread(target=handleClient2, args=(2, deck))
+		items_produced = 0
+		counter = 0
 
-	# starting thread 1
-	t1.start()
-	# starting thread 2
-	t2.start()
+		while items_produced < 20:
+			empty.acquire()
+			mutex.acquire()
 
-	# wait until thread 1 is completely executed
-	t1.join()
-	# wait until thread 2 is completely executed
-	t2.join()
+			counter += 1
+			q.put(counter)
+			print("Producer produced : ", counter)
 
-	# both threads completely executed
-	print("Done!")
+			mutex.release()
+			full.release()
 
+			time.sleep(1)
+
+			items_produced += 1
+ 
+# Consumer Thread Class
+class Consumer(threading.Thread):
+	def run(self):
+
+		global mutex, empty, full, q
+		items_consumed = 0
+
+		while items_consumed < 20:
+			full.acquire()
+			mutex.acquire()
+
+			item = q.get()
+			print("Consumer consumed item : ", item)
+
+			mutex.release()
+			empty.release()      
+
+			time.sleep(5)
+
+			items_consumed += 1
+ 
+# Creating Threads
+producer = Producer()
+consumer = Consumer()
+ 
+# Starting Threads
+consumer.start()
+producer.start()
+ 
+# Waiting for threads to complete
+producer.join()
+consumer.join()
 
