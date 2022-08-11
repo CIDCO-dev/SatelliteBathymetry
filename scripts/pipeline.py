@@ -1,11 +1,10 @@
-import sys, os, subprocess, threading, time, zipfile
+import sys, os, subprocess, threading
 from queue import Queue
 sys.path.insert(0,"../src/python")
 from sentinel2_imgs_downloader import Sentinel2Downloader
 
 
-# Producer Thread Class
-class Download_product(threading.Thread):
+class DownloadProduct(threading.Thread):
 	def run(self):
 
 		global mutex, empty, full, sentinelDirQueue, products
@@ -41,11 +40,9 @@ class Download_product(threading.Thread):
 			
 			mutex.release()
 			full.release()
-			#time.sleep(3)
 			index+=1
 			
- 
-# Consumer Thread Class
+
 class georeferenceThread(threading.Thread):
 	def run(self):
 
@@ -57,20 +54,36 @@ class georeferenceThread(threading.Thread):
 			mutex.acquire()
 
 			item = sentinelDirQueue.get()
-			print("georeferencing : ", item)
-
+			
 			mutex.release()
 			empty.release()
-			#time.sleep(1)
 			items_consumed += 1
+			print("georeferencing : ", item)
+			# ici on va utiliser la class/fonction que Samuel a ecrit pour trouver les fichiers voulu et les parser avec MBES georeference
+			# etape 1 trouver des surfaces avec une profondeur de 3 a 20m
+			# etape 2 mettre tout les points (qui peuvent etre calculer dans un image X) dans un seul fichier
+			
+			#mutex2.aquire()
+			#pointFileQueue.put(path)
+			#mutex2.release()
+			
 
+class Sentinel2ImageProcesssor(threading.Thread):
+	def run(self):
 
-
-
-#def georeference():
-	# ici on va utiliser la class/fonction que Samuel a ecrit pour trouver les fichiers voulu et les parser avec MBES georeference
-	# etape 1 trouver des surfaces avec une profondeur de 3 a 20m
-	# etape 2 mettre tout les points (qui peuvent etre calculer dans un image X) dans un seul fichier
+		global mutex, pointFileQueue
+		
+		index = 0
+		
+		while index < len(products)-1:	
+			empty.acquire()
+			mutex.acquire()
+			
+			
+			mutex.release()
+			full.release()
+			index+=1
+	
 
 
 #def computeSatBathy:
@@ -117,34 +130,17 @@ empty = threading.Semaphore(nbProduct)
 full = threading.Semaphore(0)
 
 # Creating Threads
-producer = Download_product()
-consumer = georeferenceThread()
+downloader = DownloadProduct()
+georeferencer = georeferenceThread()
+satelliteDepthProcessor = Sentinel2ImageProcesssor()
  
 # Starting Threads
-consumer.start()
-producer.start()
+georeferencer.start()
+downloader.start()
  
 # Waiting for threads to complete
-producer.join()
-consumer.join()
+downloader.join()
+georeferencer.join()
 
 
 
-
-
-
-"""
-#sentinel2DownloaderThread = threading.Thread(target=download_products, args=(products, SentinelDirDeck))
-
-#georeferenceThread = threading.Thread(target=georeference, args=(pointFileDeck))
-
-#processSentinelThread = threading.Thread(target=computeSatBathy, args=(SentinelDirDeck, pointFileDeck))
-
-
-# starting thread 1
-sentinel2DownloaderThread.start()
-
-# wait until thread 1 is completely executed
-sentinel2DownloaderThread.join()
-
-"""
