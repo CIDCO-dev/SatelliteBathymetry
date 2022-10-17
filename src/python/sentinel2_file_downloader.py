@@ -63,7 +63,3 @@ class Sentinel2Downloader(object):
             sys.stderr.write(f"Error while fetching file search results: {req.status_code}\n")
         return 0
 
-
-if __name__ == "__main__":
-
-    pass
