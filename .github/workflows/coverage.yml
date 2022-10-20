@@ -18,4 +18,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest
       - name: Run tests
-        run: pytest test.py -v --username ${{secrets.test_credential_user}} --password ${{secrets.test_credential_password}}
+        env:
+          pass: ${{secrets.test_credential_password}}
+          user: ${{secrets.test_credential_user}}
+        run: pytest test.py -v --username "$user" --password "$pass"
