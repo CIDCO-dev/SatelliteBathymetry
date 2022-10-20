@@ -1,7 +1,7 @@
 import sys, os, subprocess, threading
 from queue import Queue
 sys.path.insert(0,"../src/python")
-from sentinel2_imgs_downloader import Sentinel2Downloader
+from sentinel2_file_downloader import Sentinel2Downloader
 
 
 class DownloadProduct(threading.Thread):

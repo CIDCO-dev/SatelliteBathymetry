@@ -59,7 +59,8 @@ class Sentinel2Downloader(object):
             f = open(f'{path_}/{id_}.zip', 'wb')
             f.write(req.content)
             f.close()
+            return True
         else:
             sys.stderr.write(f"Error while fetching file search results: {req.status_code}\n")
-        return 0
+            return False
 
