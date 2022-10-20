@@ -21,4 +21,4 @@ jobs:
         env:
           pass: ${{secrets.test_credential_password}}
           user: ${{secrets.test_credential_user}}
-        run: pytest test.py -v --username "$user" --password "$pass"
+        run: pytest test/test.py -v --username "$user" --password "$pass"
