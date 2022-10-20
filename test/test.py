@@ -30,7 +30,7 @@ example_date_2 = 'NOW-8DAYS'
 # Define a product
 product = '72574aaf-85f0-42f3-814a-ef08a079490a'   
 
-"""
+
 # Unit tests concerning the Sentinel2Downloader class
 class TestGeneral:
 	
@@ -78,7 +78,7 @@ class TestSearchMethod:
         sat.search(self.begin_date, self.end_date, example_footprint)
         assert product in sat.search(self.begin_date, self.end_date, example_footprint)
 
-"""
+
 # Unit tests concerning the download() method
 class TestDownloadMethod:
 
@@ -93,7 +93,7 @@ class TestDownloadMethod:
     
     """
     not quite sure how useful it is to download twice the same product to verify its the same
-    isnt it tcp and https job already ?
+    isnt it already tcp and https job ?
     def test_identical_binaries(self, username, password):
         sat = Sentinel2Downloader(username, password)
         download = sat.download(product)
