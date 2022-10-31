@@ -1,0 +1,6 @@
+
+ubuntu dpendencies for c++
+apt install libopencv-dev ( 4.2 )
+apt install libpcl-dev (1.10.0+dfsg-5ubuntu1)
+apt install libeigen3-dev (3.3.7-2)
+apt install librapidxml-dev (1.13-2)

@@ -1,0 +1,24 @@
+name: 'coverage'
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test-update-file:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Python 3
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.9
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run tests
+        env:
+          pass: ${{secrets.test_credential_password}}
+          user: ${{secrets.test_credential_user}}
+        run: pytest test/test.py -v --username "$user" --password "$pass"
